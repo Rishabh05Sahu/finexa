@@ -137,7 +137,7 @@ Instructions:
     // ---------------- SAVE AI MESSAGE ----------------
     await ChatMessage.create({
       userId,
-      sessionId: defaultSessionId, // ✅ Use userId as the default session
+      sessionId: defaultSessionId,
       role: "assistant",
       content: reply,
     });

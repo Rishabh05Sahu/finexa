@@ -114,18 +114,18 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-70px)] p-4">
       <h1 className="text-2xl font-bold mb-2">AI Assistant</h1>
-      <p className="text-gray-500 text-sm mb-4">
+      <p className="text-muted-foreground text-sm mb-4">
         Ask anything about your financial activity
       </p>
 
       <div
         ref={chatRef}
-        className="flex-1 overflow-y-auto p-4 bg-white border rounded-xl space-y-4"
+        className="flex-1 overflow-y-auto p-4 bg-card border rounded-xl space-y-4"
       >
         {messages.length === 0 && !loading && (
-          <div className="flex items-center justify-center h-full text-gray-400">
+          <div className="flex items-center justify-center h-full text-muted-foreground">
             <div className="text-center">
-              <Bot className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <Bot className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
               <p>No messages yet. Start the conversation!</p>
             </div>
           </div>
@@ -139,8 +139,8 @@ export default function ChatPage() {
             }`}
           >
             {msg.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-gray-700" />
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-muted-foreground" />
               </div>
             )}
 
@@ -149,15 +149,15 @@ export default function ChatPage() {
               animate={{ opacity: 1, y: 0 }}
               className={`p-3 max-w-[70%] rounded-2xl text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-blue-600 text-white rounded-br-none"
-                  : "bg-gray-100 text-gray-800 rounded-bl-none"
+                  ? "bg-primary text-primary-foreground rounded-br-none"
+                  : "bg-muted text-foreground rounded-bl-none"
               }`}
             >
               {msg.content}
             </motion.div>
 
             {msg.role === "user" && (
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0">
                 <User className="w-4 h-4" />
               </div>
             )}
@@ -165,7 +165,7 @@ export default function ChatPage() {
         ))}
 
         {loading && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="animate-spin w-4 h-4" />
             <span>Thinking…</span>
           </div>
@@ -178,14 +178,14 @@ export default function ChatPage() {
           onKeyDown={handleKeyDown}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message…"
-          className="flex-1 p-3 border rounded-xl resize-none min-h-[50px] max-h-[120px]"
+          className="flex-1 p-3 border rounded-xl resize-none min-h-[50px] max-h-[120px] bg-background text-foreground"
           disabled={loading}
         />
 
         <button
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          className="p-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Send size={20} />
         </button>

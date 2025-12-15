@@ -15,8 +15,27 @@ export default function LoginPage() {
   const setAccessToken = useAuthStore((state: any) => state.setAccessToken);
 
   const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+
+  const validateEmail = (email: string) =>
+    /\S+@\S+\.\S+/.test(email);
 
   const handleLogin = async () => {
+    if (loading) return;
+
+    // ------- Frontend validation -------
+    if (!form.email.trim() || !form.password.trim()) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    if (!validateEmail(form.email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -28,18 +47,23 @@ export default function LoginPage() {
 
       const data = await res.json();
 
+      // ------- Backend validation / Errors -------
       if (!res.ok) {
         toast.error(data.error || "Invalid credentials");
+        setLoading(false);
         return;
       }
 
+      // ------- Success -------
       setAccessToken(data.accessToken);
-      toast.success("Logged in!");
+      toast.success("Logged in successfully!");
 
       router.push("/dashboard");
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error("Something went wrong, please try again");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -68,8 +92,12 @@ export default function LoginPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
 
-            <Button className="w-full" onClick={handleLogin}>
-              Login
+            <Button
+              className="w-full"
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
             <p className="text-center text-sm text-gray-600 mt-4">

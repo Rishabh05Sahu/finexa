@@ -6,7 +6,18 @@ import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { TrendingUp, PieChart as PieIcon, Brain, Calendar } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const COLORS = [
   "#4f46e5",
@@ -39,23 +50,22 @@ export default function InsightsPage() {
   const [loadingBudget, setLoadingBudget] = useState(false);
 
   useEffect(() => {
-  if (!stats || !accessToken) return;
+    if (!stats || !accessToken) return;
 
-  const fetchAnomalies = async () => {
-    const res = await fetch("/api/ai/anomaly", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    });
+    const fetchAnomalies = async () => {
+      const res = await fetch("/api/ai/anomaly", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
 
-    const data = await res.json();
-    setAnomalies(data.anomalies || []);
-  };
+      const data = await res.json();
+      setAnomalies(data.anomalies || []);
+    };
 
-  fetchAnomalies();
-}, [stats]);
-
+    fetchAnomalies();
+  }, [stats]);
 
   // 1) Fetch stats from /api/dashboard
   useEffect(() => {
@@ -147,31 +157,35 @@ export default function InsightsPage() {
   }, [stats]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Insights</h1>
-        <p className="text-gray-500 text-sm">
+        <h1 className="text-2xl sm:text-3xl font-bold">Insights</h1>
+        <p className="text-muted-foreground text-xs sm:text-sm">
           AI-powered breakdown of your spending habits
         </p>
       </div>
 
       {/* Monthly Summary */}
       <Card className="shadow-sm">
-        <CardHeader className="flex items-center gap-3">
-          <TrendingUp className="text-blue-600" />
-          <CardTitle>Monthly Summary</CardTitle>
+        <CardHeader className="flex items-center gap-2 sm:gap-3 pb-3">
+          <TrendingUp className="text-blue-600 dark:text-blue-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <CardTitle className="text-base sm:text-lg">
+            Monthly Summary
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-gray-700"
+            className="text-foreground"
           >
-            {loadingSummary && <p>Generating monthly summary…</p>}
+            {loadingSummary && (
+              <p className="text-sm">Generating monthly summary…</p>
+            )}
 
             {!loadingSummary && monthlySummary && (
-              <ul className="list-disc pl-5 space-y-2 whitespace-pre-line">
+              <ul className="list-disc pl-4 sm:pl-5 space-y-1 sm:space-y-2 whitespace-pre-line text-sm sm:text-base">
                 {monthlySummary.split("\n").map((line, i) => (
                   <li key={i}>{line.replace(/^[^\w]+/, "").trim()}</li>
                 ))}
@@ -179,7 +193,7 @@ export default function InsightsPage() {
             )}
 
             {!loadingSummary && !monthlySummary && (
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted-foreground text-xs sm:text-sm">
                 Not enough data to generate a summary.
               </p>
             )}
@@ -187,57 +201,106 @@ export default function InsightsPage() {
         </CardContent>
       </Card>
 
-      {/* Category Breakdown Pie Chart */}
-      <Card className="shadow-sm">
-        <CardHeader className="flex items-center gap-3">
-          <PieIcon className="text-purple-600" />
-          <CardTitle>Category Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[280px] flex items-center justify-center">
-          {stats?.categoryBreakdown?.length ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats.categoryBreakdown}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={90}
-                  label
-                >
-                  {stats.categoryBreakdown.map((entry: any, index: number) => (
-                    <Cell
-                      key={entry.name}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-gray-500 text-sm">No category data available.</p>
-          )}
-        </CardContent>
-      </Card>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Line Chart */}
+        <Card className="lg:col-span-2 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
+              Monthly Expense Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[240px] sm:h-[280px] min-h-[240px]">
+            {stats?.monthlyTrend?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <LineChart data={stats.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 10 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="expense"
+                    stroke="#4f46e5"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pie Chart */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
+              Category Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[240px] sm:h-[280px] min-h-[240px] flex justify-center">
+            {stats?.categoryBreakdown?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <PieChart>
+                  <Pie
+                    data={stats.categoryBreakdown}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={60}
+                    className="sm:outerRadius-[80px]"
+                    label={{ fontSize: 10 }}
+                  >
+                    {stats.categoryBreakdown.map(
+                      (entry: any, index: number) => (
+                        <Cell
+                          key={entry.name}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      )
+                    )}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No category data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* AI Financial Insights */}
       <Card className="shadow-sm">
-        <CardHeader className="flex items-center gap-3">
-          <Brain className="text-rose-600" />
-          <CardTitle>AI Financial Insights</CardTitle>
+        <CardHeader className="flex items-center gap-2 sm:gap-3 pb-3">
+          <Brain className="text-rose-600 dark:text-rose-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <CardTitle className="text-base sm:text-lg">
+            AI Financial Insights
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-50 p-4 rounded-xl border text-gray-700 leading-relaxed min-h-[80px]"
+            className="bg-muted p-3 sm:p-4 rounded-xl border text-foreground leading-relaxed min-h-[80px] text-sm sm:text-base"
           >
             {loadingInsights && <p>Generating insights with AI…</p>}
             {!loadingInsights && aiInsights && (
               <p className="whitespace-pre-line">{aiInsights}</p>
             )}
             {!loadingInsights && !aiInsights && (
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted-foreground text-xs sm:text-sm">
                 Not enough data yet to generate insights.
               </p>
             )}
@@ -247,20 +310,22 @@ export default function InsightsPage() {
 
       {/* Anomaly Detection */}
       <Card className="shadow-sm">
-        <CardHeader className="flex items-center gap-3">
-          <TrendingUp className="text-red-500" />
-          <CardTitle>Spending Anomalies</CardTitle>
+        <CardHeader className="flex items-center gap-2 sm:gap-3 pb-3">
+          <TrendingUp className="text-red-500 dark:text-red-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <CardTitle className="text-base sm:text-lg">
+            Spending Anomalies
+          </CardTitle>
         </CardHeader>
 
         <CardContent>
           {!anomalies.length && (
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               No unusual spending detected.
             </p>
           )}
 
           {anomalies.length > 0 && (
-            <ul className="list-disc pl-5 space-y-2 text-gray-700">
+            <ul className="list-disc pl-4 sm:pl-5 space-y-1 sm:space-y-2 text-foreground text-sm sm:text-base">
               {anomalies.map((a: any, i: number) => (
                 <li key={i}>
                   <strong>{a.day}:</strong> {a.message}
@@ -273,19 +338,21 @@ export default function InsightsPage() {
 
       {/* AI Budget Recommendations */}
       <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>AI Budget Recommendations</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">
+            AI Budget Recommendations
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-50 p-4 rounded-xl border text-gray-700 leading-relaxed"
+            className="bg-muted p-3 sm:p-4 rounded-xl border text-foreground leading-relaxed text-sm sm:text-base"
           >
             {loadingBudget && <p>Calculating smart budget suggestions…</p>}
 
             {!loadingBudget && budgetText && (
-              <ul className="list-disc pl-5 space-y-2 whitespace-pre-line">
+              <ul className="list-disc pl-4 sm:pl-5 space-y-1 sm:space-y-2 whitespace-pre-line">
                 {budgetText
                   .split("\n")
                   .map((line) => line.trim())
@@ -302,7 +369,7 @@ export default function InsightsPage() {
             )}
 
             {!loadingBudget && !budgetText && (
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted-foreground text-xs sm:text-sm">
                 Not enough data to suggest a budget yet.
               </p>
             )}
@@ -312,48 +379,56 @@ export default function InsightsPage() {
 
       {/* Month-over-Month Comparison */}
       <Card className="shadow-sm">
-        <CardHeader className="flex items-center gap-3">
-          <Calendar className="text-green-600" />
-          <CardTitle>Month-over-Month Comparison</CardTitle>
+        <CardHeader className="flex items-center gap-2 sm:gap-3 pb-3">
+          <Calendar className="text-green-600 dark:text-green-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <CardTitle className="text-base sm:text-lg">
+            Month-over-Month Comparison
+          </CardTitle>
         </CardHeader>
-        <CardContent className="text-gray-700">
+        <CardContent className="text-foreground">
           {!stats?.monthComparison ? (
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Not enough data to compare months.
             </p>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4"
             >
-              <div className="p-4 rounded-xl border bg-white">
-                <p className="text-sm text-gray-500">This Month</p>
-                <p className="text-2xl font-bold">
+              <div className="p-3 sm:p-4 rounded-xl border bg-card">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  This Month
+                </p>
+                <p className="text-xl sm:text-2xl font-bold">
                   ₹ {stats.monthComparison.thisMonth || 0}
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border bg-white">
-                <p className="text-sm text-gray-500">Last Month</p>
-                <p className="text-2xl font-bold">
+              <div className="p-3 sm:p-4 rounded-xl border bg-card">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Last Month
+                </p>
+                <p className="text-xl sm:text-2xl font-bold">
                   ₹ {stats.monthComparison.lastMonth || 0}
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border bg-white">
-                <p className="text-sm text-gray-500">Difference</p>
+              <div className="p-3 sm:p-4 rounded-xl border bg-card sm:col-span-2 md:col-span-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Difference
+                </p>
                 <p
-                  className={`text-2xl font-bold ${
+                  className={`text-xl sm:text-2xl font-bold ${
                     stats.monthComparison.difference > 0
-                      ? "text-red-500"
-                      : "text-green-600"
+                      ? "text-red-500 dark:text-red-400"
+                      : "text-green-600 dark:text-green-400"
                   }`}
                 >
                   {stats.monthComparison.difference > 0 ? "+" : "-"} ₹{" "}
                   {Math.abs(stats.monthComparison.difference || 0)}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   {stats.monthComparison.lastMonth === 0
                     ? "No spending last month."
                     : `${(

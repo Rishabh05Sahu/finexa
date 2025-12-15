@@ -126,13 +126,13 @@ export default function TransactionsPage() {
     <div className="space-y-6 relative">
       {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 animate-in fade-in zoom-in">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-card text-card-foreground rounded-xl shadow-xl w-full max-w-lg p-4 animate-in fade-in zoom-in border">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-semibold">Add Transaction</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-lg"
+                className="text-muted-foreground hover:text-foreground text-lg"
               >
                 ✕
               </button>
@@ -146,7 +146,7 @@ export default function TransactionsPage() {
       <div className="flex flex-col md:flex-row items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Transactions</h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-muted-foreground text-sm">
             Manage and view all your transactions
           </p>
         </div>
@@ -173,16 +173,12 @@ export default function TransactionsPage() {
             <Filter size={18} /> Filters
           </CardTitle>
         </CardHeader>
-
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
           <Input
             placeholder="Search by description or category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
-          {/* Type Filter */}
           <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger>
               <SelectValue placeholder="Filter by type" />
@@ -201,10 +197,9 @@ export default function TransactionsPage() {
         <CardHeader>
           <CardTitle className="text-lg">Recent Transactions</CardTitle>
         </CardHeader>
-
         <CardContent className="space-y-3">
           {filteredTransactions.length === 0 && (
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               No matching transactions found.
             </p>
           )}
@@ -212,11 +207,11 @@ export default function TransactionsPage() {
           {filteredTransactions.map((t: any) => (
             <div
               key={t._id}
-              className="flex justify-between items-center p-5 border rounded-xl bg-white"
+              className="flex justify-between items-center p-5 border rounded-xl bg-card"
             >
               <div>
                 <p className="font-medium">{t.description}</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {t.category} • {new Date(t.date).toLocaleDateString()}
                 </p>
               </div>
@@ -224,25 +219,25 @@ export default function TransactionsPage() {
               <div className="flex items-center gap-3">
                 <span
                   className={`font-semibold ${
-                    t.type === "income" ? "text-green-600" : "text-red-600"
+                    t.type === "income" 
+                      ? "text-green-600 dark:text-green-400" 
+                      : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {t.type === "income" ? "+" : "-"}₹{t.amount}
                 </span>
 
-                {/* Delete */}
                 <Trash
                   onClick={() => setDeleteId(t._id)}
-                  className="text-red-500 cursor-pointer  hover:text-red-700 text-sm"
+                  className="text-destructive cursor-pointer hover:text-destructive/80 text-sm"
                 />
 
-                {/* Edit */}
                 <Pencil
                   onClick={() => {
                     setEditData(t);
                     setShowEditModal(true);
                   }}
-                  className="text-blue-600 cursor-pointer hover:text-blue-800 text-sm"
+                  className="text-primary cursor-pointer hover:text-primary/80 text-sm"
                 />
               </div>
             </div>
@@ -252,13 +247,12 @@ export default function TransactionsPage() {
 
       {/* Delete Modal */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-card text-card-foreground p-6 rounded-xl shadow-xl w-full max-w-sm border">
             <h2 className="text-lg font-semibold mb-2">Delete Transaction?</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               This action cannot be undone.
             </p>
-
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDeleteId(null)}>
                 Cancel
@@ -273,18 +267,17 @@ export default function TransactionsPage() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-card text-card-foreground rounded-xl shadow-xl w-full max-w-lg p-4 border">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-semibold">Edit Transaction</h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-lg"
+                className="text-muted-foreground hover:text-foreground text-lg"
               >
                 ✕
               </button>
             </div>
-
             <EditTransactionForm
               data={editData}
               onClose={() => setShowEditModal(false)}

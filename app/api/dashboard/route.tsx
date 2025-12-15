@@ -46,10 +46,15 @@ export async function GET(req: Request) {
       .limit(3);
 
     // ---------------------------------------
-    // CATEGORY BREAKDOWN (PIE CHART)
+    // CATEGORY BREAKDOWN (PIE CHART) - CURRENT MONTH ONLY
     // ---------------------------------------
     const categoryBreakdown = await Transaction.aggregate([
-      { $match: { userId } },
+      { 
+        $match: { 
+          userId,
+          date: { $gte: firstDay, $lte: lastDay }
+        } 
+      },
       { $group: { _id: "$category", total: { $sum: "$amount" } } },
       { $project: { name: "$_id", value: "$total", _id: 0 } },
     ]);

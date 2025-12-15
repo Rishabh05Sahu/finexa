@@ -20,6 +20,20 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import AddTransactionForm from "@/components/molecules/addtransaction";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  // ThemeToggle,
+} from "@/components/ui/sidebar";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 
 const COLORS = [
   "#4f46e5", // Indigo
@@ -42,6 +56,7 @@ export default function DashboardPage() {
   const accessToken = useAuthStore((s: any) => s.accessToken);
   const [showAddModal, setShowAddModal] = useState(false);
   const [aiSummary, setAiSummary] = useState("");
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!stats) return;
@@ -85,16 +100,16 @@ export default function DashboardPage() {
   }, [accessToken]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-8 space-y-6 relative">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
       {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 animate-in fade-in zoom-in">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-card text-card-foreground rounded-xl shadow-xl w-full max-w-lg p-3 sm:p-4 animate-in fade-in zoom-in border">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xl font-semibold">Add Transaction</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">Add Transaction</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-lg"
+                className="text-muted-foreground hover:text-foreground text-lg sm:text-xl"
               >
                 ✕
               </button>
@@ -105,39 +120,44 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div className="flex justify-between items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-          <p className="text-gray-500 text-sm md:text-base">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
             Overview of your finances at a glance.
           </p>
         </div>
 
-        <Button className="flex gap-2" onClick={() => setShowAddModal(true)}>
-          <PlusCircle size={18} /> Add Transaction
+        <Button 
+          className="flex gap-2 w-full sm:w-auto text-sm sm:text-base" 
+          onClick={() => setShowAddModal(true)}
+          size="sm"
+        >
+          <PlusCircle size={16} className="sm:w-[18px] sm:h-[18px]" /> 
+          <span className="hidden xs:inline">Add Transaction</span>
+          <span className="xs:hidden">Add</span>
         </Button>
       </div>
 
-      {/* Summary Cards */}
       {/* AI Spending Summary */}
-
       {aiSummary && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>AI Spending Summary</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">AI Spending Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 leading-relaxed">{aiSummary}</p>
+              <p className="text-foreground leading-relaxed text-sm sm:text-base">{aiSummary}</p>
             </CardContent>
           </Card>
         </motion.div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {/* Expense Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -145,13 +165,13 @@ export default function DashboardPage() {
         >
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-xs sm:text-sm font-medium">
                 Total Expense (This Month)
               </CardTitle>
-              <ArrowDownCircle className="text-red-500" />
+              <ArrowDownCircle className="text-red-500 w-4 h-4 sm:w-5 sm:h-5" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">₹ {stats?.expense || 0}</p>
+              <p className="text-xl sm:text-2xl font-semibold">₹ {stats?.expense || 0}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -164,13 +184,13 @@ export default function DashboardPage() {
         >
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-xs sm:text-sm font-medium">
                 Total Income (This Month)
               </CardTitle>
-              <ArrowUpCircle className="text-green-500" />
+              <ArrowUpCircle className="text-green-500 w-4 h-4 sm:w-5 sm:h-5" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">₹ {stats?.income || 0}</p>
+              <p className="text-xl sm:text-2xl font-semibold">₹ {stats?.income || 0}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -180,99 +200,119 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="sm:col-span-2 md:col-span-1"
         >
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-xs sm:text-sm font-medium">
                 Savings (This Month)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">₹ {stats?.savings || 0}</p>
+              <p className="text-xl sm:text-2xl font-semibold">₹ {stats?.savings || 0}</p>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Line Chart */}
         <Card className="lg:col-span-2 shadow-sm">
-          <CardHeader>
-            <CardTitle>Monthly Expense Trend</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">Monthly Expense Trend</CardTitle>
           </CardHeader>
-          <CardContent className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats?.monthlyTrend || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="expense"
-                  stroke="#4f46e5"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+          <CardContent className="h-[240px] sm:h-[280px] min-h-[240px]">
+            {stats?.monthlyTrend?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <LineChart data={stats.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 10 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="expense"
+                    stroke="#4f46e5"
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Pie Chart */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle>Category Breakdown</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">Category Breakdown</CardTitle>
           </CardHeader>
-          <CardContent className="h-[280px] flex justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats?.categoryBreakdown || []}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={80}
-                  label
-                >
-                  {(stats?.categoryBreakdown || []).map(
-                    (entry: any, index: number) => (
-                      <Cell
-                        key={entry.name}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    )
-                  )}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent className="h-[240px] sm:h-[280px] min-h-[240px] flex justify-center">
+            {stats?.categoryBreakdown?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                <PieChart>
+                  <Pie
+                    data={stats.categoryBreakdown}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={60}
+                    className="sm:outerRadius-[80px]"
+                    label={{ fontSize: 10 }}
+                  >
+                    {stats.categoryBreakdown.map(
+                      (entry: any, index: number) => (
+                        <Cell
+                          key={entry.name}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      )
+                    )}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No category data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Transactions */}
       <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {stats?.recent?.map((t: any) => (
               <div
                 key={t._id}
-                className="flex justify-between items-center p-3 border rounded-xl bg-white"
+                className="flex justify-between items-center p-2 sm:p-3 border rounded-xl bg-card"
               >
-                <div>
-                  <p className="font-medium">{t.description}</p>
-                  <p className="text-xs text-gray-500">{t.category}</p>
+                <div className="flex-1 min-w-0 pr-2">
+                  <p className="font-medium text-sm sm:text-base truncate">{t.description}</p>
+                  <p className="text-xs text-muted-foreground">{t.category}</p>
                 </div>
-                <span className="font-semibold">₹ {t.amount}</span>
+                <span className="font-semibold text-sm sm:text-base whitespace-nowrap">₹ {t.amount}</span>
               </div>
             ))}
 
             {!stats?.recent?.length && (
-              <p className="text-gray-500 text-sm">No recent transactions.</p>
+              <p className="text-muted-foreground text-sm">No recent transactions.</p>
             )}
           </div>
         </CardContent>
