@@ -17,8 +17,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const validateEmail = (email: string) =>
-    /\S+@\S+\.\S+/.test(email);
+  const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
   const handleLogin = async () => {
     if (loading) return;
@@ -92,11 +91,7 @@ export default function LoginPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
 
-            <Button
-              className="w-full"
-              onClick={handleLogin}
-              disabled={loading}
-            >
+            <Button className="w-full" onClick={handleLogin} disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </Button>
 

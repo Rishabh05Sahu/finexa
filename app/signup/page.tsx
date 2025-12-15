@@ -18,14 +18,13 @@ export default function SignupPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
-  
   const isPasswordStrong = (password: string) => {
     return (
-      password.length >= 8 &&                 // at least 8 characters
-      /[A-Z]/.test(password) &&              // one uppercase
-      /[a-z]/.test(password) &&              // one lowercase
-      /[0-9]/.test(password) &&              // one digit
-      /[^A-Za-z0-9]/.test(password)          // one symbol
+      password.length >= 8 && // at least 8 characters
+      /[A-Z]/.test(password) && // one uppercase
+      /[a-z]/.test(password) && // one lowercase
+      /[0-9]/.test(password) && // one digit
+      /[^A-Za-z0-9]/.test(password) // one symbol
     );
   };
 
@@ -34,8 +33,6 @@ export default function SignupPage() {
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleSignup = async () => {
-
-
     if (!form.name || !form.email || !form.password) {
       toast.error("All fields are required");
       return;
@@ -82,10 +79,15 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <Card className="w-[380px] shadow-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Create Account</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              Create Account
+            </CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -128,7 +130,10 @@ export default function SignupPage() {
 
             <p className="text-center text-sm text-gray-600 mt-4">
               Already have an account?
-              <Link href="/login" className="text-blue-600"> Login</Link>
+              <Link href="/login" className="text-blue-600">
+                {" "}
+                Login
+              </Link>
             </p>
           </CardContent>
         </Card>
