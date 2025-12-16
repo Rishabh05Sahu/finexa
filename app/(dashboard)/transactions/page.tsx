@@ -197,7 +197,8 @@ export default function TransactionsPage() {
         <CardHeader>
           <CardTitle className="text-lg">Recent Transactions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+
+        <CardContent className="space-y-4">
           {filteredTransactions.length === 0 && (
             <p className="text-muted-foreground text-sm">
               No matching transactions found.
@@ -207,38 +208,64 @@ export default function TransactionsPage() {
           {filteredTransactions.map((t: any) => (
             <div
               key={t._id}
-              className="flex justify-between items-center p-5 border rounded-xl bg-card"
+              className="
+          group
+          flex items-center justify-between
+          p-4 rounded-xl border bg-card
+          hover:shadow-md hover:border-primary/30
+          transition-all duration-300 ease-in-out
+          relative overflow-hidden
+        "
             >
-              <div>
-                <p className="font-medium">{t.description}</p>
-                <p className="text-xs text-muted-foreground">
+              {/* LEFT ACCENT BAR */}
+              <div
+                className={`
+            absolute left-0 top-0 h-full w-1 rounded-r-xl
+            ${t.type === "income" ? "bg-green-500" : "bg-red-500"}
+          `}
+              ></div>
+
+              {/* LEFT CONTENT */}
+              <div className="pl-3">
+                <p className="font-semibold text-base text-foreground">
+                  {t.description}
+                </p>
+
+                <p className="text-xs text-muted-foreground mt-1">
                   {t.category} • {new Date(t.date).toLocaleDateString()}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* RIGHT CONTENT */}
+              <div className="flex items-center gap-4">
                 <span
-                  className={`font-semibold ${
-                    t.type === "income" 
-                      ? "text-green-600 dark:text-green-400" 
-                      : "text-red-600 dark:text-red-400"
-                  }`}
+                  className={`
+              font-bold text-sm px-2 py-1 rounded-lg
+              ${
+                t.type === "income"
+                  ? "text-green-600 dark:text-green-400 bg-green-500/10"
+                  : "text-red-600 dark:text-red-400 bg-red-500/10"
+              }
+            `}
                 >
                   {t.type === "income" ? "+" : "-"}₹{t.amount}
                 </span>
 
-                <Trash
-                  onClick={() => setDeleteId(t._id)}
-                  className="text-destructive cursor-pointer hover:text-destructive/80 text-sm"
-                />
+                {/* ACTION BUTTONS */}
+                <div className="flex items-center gap-2 opacity-80 group-hover:opacity-100 transition">
+                  <Pencil
+                    onClick={() => {
+                      setEditData(t);
+                      setShowEditModal(true);
+                    }}
+                    className="w-5 h-5 text-primary cursor-pointer hover:scale-110 transition"
+                  />
 
-                <Pencil
-                  onClick={() => {
-                    setEditData(t);
-                    setShowEditModal(true);
-                  }}
-                  className="text-primary cursor-pointer hover:text-primary/80 text-sm"
-                />
+                  <Trash
+                    onClick={() => setDeleteId(t._id)}
+                    className="w-5 h-5 text-destructive cursor-pointer hover:scale-110 transition"
+                  />
+                </div>
               </div>
             </div>
           ))}
