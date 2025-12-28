@@ -62,14 +62,23 @@ export default function DashboardPage() {
     if (!stats) return;
 
     const getSummary = async () => {
-      const res = await fetch("/api/ai/summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stats }),
-      });
+      try {
+        const res = await fetch("/api/ai/summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stats }),
+        });
 
-      const data = await res.json();
-      setAiSummary(data.summary);
+        if (!res.ok) {
+          console.error("AI summary failed:", res.status);
+          return;
+        }
+
+        const data = await res.json();
+        setAiSummary(data.summary || "");
+      } catch (err) {
+        console.error("Error fetching AI summary:", err);
+      }
     };
 
     getSummary();

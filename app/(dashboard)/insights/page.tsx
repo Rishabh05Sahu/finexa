@@ -99,16 +99,26 @@ export default function InsightsPage() {
 
     const getMonthlySummary = async () => {
       setLoadingSummary(true);
+      try {
+        const res = await fetch("/api/ai/monthly-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stats }),
+        });
 
-      const res = await fetch("/api/ai/monthly-summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stats }),
-      });
+        if (!res.ok) {
+          console.error("Monthly summary failed:", res.status);
+          setLoadingSummary(false);
+          return;
+        }
 
-      const data = await res.json();
-      setMonthlySummary(data.summary);
-      setLoadingSummary(false);
+        const data = await res.json();
+        setMonthlySummary(data.summary || "");
+      } catch (err) {
+        console.error("Error fetching monthly summary:", err);
+      } finally {
+        setLoadingSummary(false);
+      }
     };
 
     getMonthlySummary();
@@ -120,16 +130,26 @@ export default function InsightsPage() {
 
     const fetchInsights = async () => {
       setLoadingInsights(true);
+      try {
+        const res = await fetch("/api/ai/insights", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stats }),
+        });
 
-      const res = await fetch("/api/ai/insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stats }),
-      });
+        if (!res.ok) {
+          console.error("AI insights failed:", res.status);
+          setLoadingInsights(false);
+          return;
+        }
 
-      const data = await res.json();
-      setAiInsights(data.insights);
-      setLoadingInsights(false);
+        const data = await res.json();
+        setAiInsights(data.insights || "");
+      } catch (err) {
+        console.error("Error fetching AI insights:", err);
+      } finally {
+        setLoadingInsights(false);
+      }
     };
 
     fetchInsights();
@@ -141,16 +161,26 @@ export default function InsightsPage() {
 
     const fetchBudget = async () => {
       setLoadingBudget(true);
+      try {
+        const res = await fetch("/api/ai/budget", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stats }),
+        });
 
-      const res = await fetch("/api/ai/budget", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stats }),
-      });
+        if (!res.ok) {
+          console.error("Budget recommendation failed:", res.status);
+          setLoadingBudget(false);
+          return;
+        }
 
-      const data = await res.json();
-      setBudgetText(data.budget);
-      setLoadingBudget(false);
+        const data = await res.json();
+        setBudgetText(data.budget || "");
+      } catch (err) {
+        console.error("Error fetching budget recommendations:", err);
+      } finally {
+        setLoadingBudget(false);
+      }
     };
 
     fetchBudget();

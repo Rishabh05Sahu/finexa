@@ -1,5 +1,11 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 export async function POST(req: Request) {
   try {
@@ -12,58 +18,74 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if API key exists
-    if (!process.env.GEMINI_API_KEY) {
+    // If Groq key missing → fallback summary
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({
-        summary: `💰 Your income this month is ₹${stats.income || 0}, expenses are ₹${stats.expense || 0}, and savings are ₹${stats.savings || 0}. Keep tracking your spending!`
+        summary: generateFallbackSummary(stats),
       });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-
     const prompt = `
-You are a financial advisor. Analyze this month's financial stats:
+You are a financial advisor.
+
+Analyze this month's financial stats:
 
 Income: ₹${stats.income}
 Expense: ₹${stats.expense}
 Savings: ₹${stats.savings}
 
 Category Breakdown (Top categories only):
-${JSON.stringify(stats.categoryBreakdown.slice(0, 5))}
+${JSON.stringify(stats.categoryBreakdown?.slice(0, 5) || [])}
 
+Write a short 2–3 line summary.
+Be simple, encouraging, and insightful.
+You may use emojis.
+Return ONLY the summary text.
+`;
 
-Write a short 2–3 line summary. Be simple, encouraging, and insightful and you can use emojis also:
-Return ONLY the summary. No titles or formatting.
-    `;
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful financial assistant.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+    });
 
-    const result = await model.generateContent(prompt);
-    const text = await result.response.text();
+    const text = completion.choices[0].message.content;
 
-    return NextResponse.json({ summary: text.trim() });
+    return NextResponse.json({ summary: text?.trim() });
   } catch (err: any) {
     console.error("AI summary error:", err);
-    
-    // Handle quota exceeded or rate limit errors
-    if (err?.status === 429 || err?.message?.includes("quota") || err?.message?.includes("rate")) {
+
+    // Rate limit / quota fallback
+    if (
+      err?.status === 429 ||
+      err?.message?.includes("rate") ||
+      err?.message?.includes("limit")
+    ) {
       const { stats } = await req.json().catch(() => ({ stats: null }));
-      
-      // Generate a simple fallback summary
-      const fallbackSummary = generateFallbackSummary(stats);
-      
+
       return NextResponse.json({
-        summary: fallbackSummary
+        summary: generateFallbackSummary(stats),
       });
     }
 
-    // For other errors, return a generic message
     return NextResponse.json({
-      summary: "Could not generate summary right now."
+      summary: "Could not generate summary right now.",
     });
   }
 }
 
-// Fallback function to generate summary when API quota is exceeded
+// ===============================
+// Fallback summary (UNCHANGED)
+// ===============================
 function generateFallbackSummary(stats: any) {
   if (!stats) {
     return "📊 Track your expenses to see insights here!";

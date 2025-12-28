@@ -1,14 +1,20 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { connectDB } from "@/lib/db";
 import Transaction from "@/models/Transactions";
 import ChatMessage from "@/models/ChatMessage";
 import { verifyAuth } from "@/lib/verifyAuth";
+import Groq from "groq-sdk";
 
 type ChatMessageType = {
   role: "user" | "assistant";
   content: string;
 };
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY!,
+});
 
 export async function POST(req: Request) {
   try {
@@ -22,20 +28,17 @@ export async function POST(req: Request) {
     }
 
     const userId = user.id;
+    const defaultSessionId = userId;
 
     const body = await req.json();
     const messages: ChatMessageType[] = body.messages || [];
-
     const lastMessage = messages[messages.length - 1];
     const userInput = lastMessage?.content || "";
-
-    // ✅ Use a single default sessionId for all messages (just use userId as sessionId)
-    const defaultSessionId = userId;
 
     // ---------------- SAVE USER MESSAGE ----------------
     await ChatMessage.create({
       userId,
-      sessionId: defaultSessionId, // ✅ Use userId as the default session
+      sessionId: defaultSessionId,
       role: "user",
       content: userInput,
     });
@@ -67,8 +70,10 @@ export async function POST(req: Request) {
     // Category totals
     const categoryMap: Record<string, number> = {};
     allTx.forEach((t: any) => {
-      if (!categoryMap[t.category]) categoryMap[t.category] = 0;
-      if (t.type === "expense") categoryMap[t.category] += t.amount;
+      if (t.type === "expense") {
+        categoryMap[t.category] =
+          (categoryMap[t.category] || 0) + t.amount;
+      }
     });
 
     const categorySummary = Object.entries(categoryMap).map(([name, value]) => ({
@@ -76,21 +81,21 @@ export async function POST(req: Request) {
       value,
     }));
 
-    // Recent transactions summary
+    // Recent transactions
     const recentTxText = allTx
       .slice(0, 20)
       .map(
         (t: any) =>
-          `${new Date(t.date).toISOString().slice(0, 10)} - ${
-            t.type
-          } - ${t.category} - ₹${t.amount} - ${t.description || ""}`
+          `${new Date(t.date).toISOString().slice(0, 10)} - ${t.type} - ${
+            t.category
+          } - ₹${t.amount} - ${t.description || ""}`
       )
       .join("\n");
 
-    // ---------- CHAT HISTORY (all user's messages) ----------
-    const chatHistory = await ChatMessage.find({ userId }).sort({
-      createdAt: 1,
-    }).limit(50); // ✅ Get last 50 messages for context
+    // ---------- Chat history ----------
+    const chatHistory = await ChatMessage.find({ userId })
+      .sort({ createdAt: 1 })
+      .limit(50);
 
     const historyText = chatHistory
       .map(
@@ -99,12 +104,7 @@ export async function POST(req: Request) {
       )
       .join("\n");
 
-    // ---------- LLM Prompt ----------
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-lite",
-    });
-
+    // ---------- Prompt ----------
     const prompt = `
 You are a friendly personal finance assistant.
 
@@ -125,14 +125,31 @@ Conversation so far:
 ${historyText}
 
 Instructions:
-- Respond based only on this data.
-- If the user asks something unrelated, say you don't have data.
+- Respond ONLY using the data above.
+- If the user asks something unrelated, say you don’t have enough data.
 - Use emojis.
-- Keep answers short (2–4 sentences).
+- Keep replies short (2–4 sentences).
 `;
 
-    const result = await model.generateContent(prompt);
-    const reply = result.response.text().trim();
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a concise, friendly personal finance assistant.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.6,
+    });
+
+    const reply =
+      completion.choices[0].message.content?.trim() ||
+      "Sorry, I couldn't process that right now.";
 
     // ---------------- SAVE AI MESSAGE ----------------
     await ChatMessage.create({
