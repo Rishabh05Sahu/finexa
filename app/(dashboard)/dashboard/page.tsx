@@ -59,13 +59,16 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!stats) return;
+    if (!stats || !accessToken) return;
 
     const getSummary = async () => {
       try {
         const res = await fetch("/api/ai/summary", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add this line
+          },
           body: JSON.stringify({ stats }),
         });
 
@@ -82,10 +85,14 @@ export default function DashboardPage() {
     };
 
     getSummary();
-  }, [stats]);
+  }, [stats, accessToken]); // Add accessToken to dependencies
 
   useEffect(() => {
-    if (!accessToken) return;
+    // Redirect if no access token
+    if (!accessToken) {
+      router.push("/login");
+      return;
+    }
 
     const fetchDashboard = async () => {
       const res = await fetch("/api/dashboard", {
@@ -106,7 +113,7 @@ export default function DashboardPage() {
     };
 
     fetchDashboard();
-  }, [accessToken]);
+  }, [accessToken, router]);
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">

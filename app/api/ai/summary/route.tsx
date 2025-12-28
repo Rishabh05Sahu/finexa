@@ -2,6 +2,13 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { connectDB } from "@/lib/db";
+import { verifyAuth } from "@/lib/verifyAuth";
+import {
+  getCachedResponse,
+  saveCachedResponse,
+  generateStatsHash,
+} from "@/lib/aiCache";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY!,
@@ -9,6 +16,16 @@ const groq = new Groq({
 
 export async function POST(req: Request) {
   try {
+    await connectDB();
+
+    // Get user from token
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const user = verifyAuth(token);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { stats } = await req.json();
 
     if (!stats) {
@@ -18,11 +35,26 @@ export async function POST(req: Request) {
       );
     }
 
+    // Generate hash of stats to detect changes
+    const statsHash = generateStatsHash(stats);
+    
+    // Check cache first
+    const cachedResponse = await getCachedResponse(
+      user.id,
+      "summary",
+      statsHash
+    );
+
+    // Return cached response if available
+    if (cachedResponse) {
+      return NextResponse.json({ summary: cachedResponse });
+    }
+
     // If Groq key missing → fallback summary
     if (!process.env.GROQ_API_KEY) {
-      return NextResponse.json({
-        summary: generateFallbackSummary(stats),
-      });
+      const fallback = generateFallbackSummary(stats);
+      await saveCachedResponse(user.id, "summary", statsHash, fallback);
+      return NextResponse.json({ summary: fallback });
     }
 
     const prompt = `
@@ -58,9 +90,14 @@ Return ONLY the summary text.
       temperature: 0.7,
     });
 
-    const text = completion.choices[0].message.content;
+    const text = completion.choices[0].message.content?.trim() || "";
 
-    return NextResponse.json({ summary: text?.trim() });
+    // Cache the response before returning
+    if (text) {
+      await saveCachedResponse(user.id, "summary", statsHash, text);
+    }
+
+    return NextResponse.json({ summary: text });
   } catch (err: any) {
     console.error("AI summary error:", err);
 
@@ -70,11 +107,21 @@ Return ONLY the summary text.
       err?.message?.includes("rate") ||
       err?.message?.includes("limit")
     ) {
-      const { stats } = await req.json().catch(() => ({ stats: null }));
+      try {
+        const token = req.headers.get("authorization")?.replace("Bearer ", "");
+        const user = verifyAuth(token);
+        const reqClone = req.clone();
+        const { stats } = await reqClone.json().catch(() => ({ stats: null }));
 
-      return NextResponse.json({
-        summary: generateFallbackSummary(stats),
-      });
+        if (user && stats) {
+          const statsHash = generateStatsHash(stats);
+          const fallback = generateFallbackSummary(stats);
+          await saveCachedResponse(user.id, "summary", statsHash, fallback);
+          return NextResponse.json({ summary: fallback });
+        }
+      } catch (e) {
+        // Ignore
+      }
     }
 
     return NextResponse.json({
@@ -83,9 +130,6 @@ Return ONLY the summary text.
   }
 }
 
-// ===============================
-// Fallback summary (UNCHANGED)
-// ===============================
 function generateFallbackSummary(stats: any) {
   if (!stats) {
     return "📊 Track your expenses to see insights here!";

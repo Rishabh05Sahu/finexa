@@ -2,6 +2,13 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { connectDB } from "@/lib/db";
+import { verifyAuth } from "@/lib/verifyAuth";
+import {
+  getCachedResponse,
+  saveCachedResponse,
+  generateStatsHash,
+} from "@/lib/aiCache";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY!,
@@ -9,6 +16,15 @@ const groq = new Groq({
 
 export async function POST(req: Request) {
   try {
+    await connectDB();
+
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const user = verifyAuth(token);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { stats } = await req.json();
 
     if (!stats) {
@@ -16,6 +32,18 @@ export async function POST(req: Request) {
         { summary: "Not enough data." },
         { status: 400 }
       );
+    }
+
+    // Check cache first
+    const statsHash = generateStatsHash(stats);
+    const cachedResponse = await getCachedResponse(
+      user.id,
+      "monthly-summary",
+      statsHash
+    );
+
+    if (cachedResponse) {
+      return NextResponse.json({ summary: cachedResponse });
     }
 
     // Fallback if key missing
@@ -28,7 +56,7 @@ export async function POST(req: Request) {
     const prompt = `
 You are a financial assistant.
 
-Generate exactly 3 concise bullet points summarizing the user’s monthly spending.
+Generate exactly 3 concise bullet points summarizing the user's monthly spending.
 
 Use this data:
 
@@ -66,12 +94,17 @@ Rules:
           content: prompt,
         },
       ],
-      temperature: 0.3, // 🔑 controlled creativity
+      temperature: 0.3,
     });
 
     const summary =
       completion.choices[0].message.content?.trim() ||
       "Unable to generate monthly summary right now.";
+
+    // Cache the response
+    if (summary) {
+      await saveCachedResponse(user.id, "monthly-summary", statsHash, summary);
+    }
 
     return NextResponse.json({ summary });
   } catch (err) {

@@ -46,9 +46,18 @@ export default function AppSidebar() {
   ];
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    logout();
-    window.location.href = "/login";
+    try {
+      // Clear server-side cookie
+      await fetch("/api/auth/logout", { method: "POST" });
+      logout();
+      localStorage.removeItem("auth-storage");
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+      logout();
+      localStorage.removeItem("auth-storage");
+      window.location.href = "/login";
+    }
   };
 
   return (

@@ -2,6 +2,13 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { connectDB } from "@/lib/db";
+import { verifyAuth } from "@/lib/verifyAuth";
+import {
+  getCachedResponse,
+  saveCachedResponse,
+  generateStatsHash,
+} from "@/lib/aiCache";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY!,
@@ -9,6 +16,15 @@ const groq = new Groq({
 
 export async function POST(req: Request) {
   try {
+    await connectDB();
+
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const user = verifyAuth(token);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { stats } = await req.json();
 
     if (!stats) {
@@ -16,6 +32,18 @@ export async function POST(req: Request) {
         { budget: "Not enough data to suggest a budget." },
         { status: 400 }
       );
+    }
+
+    // Check cache first
+    const statsHash = generateStatsHash(stats);
+    const cachedResponse = await getCachedResponse(
+      user.id,
+      "budget",
+      statsHash
+    );
+
+    if (cachedResponse) {
+      return NextResponse.json({ budget: cachedResponse });
     }
 
     // Fallback if API key missing
@@ -62,12 +90,17 @@ Rules:
           content: prompt,
         },
       ],
-      temperature: 0.5, // balanced realism + flexibility
+      temperature: 0.5,
     });
 
     const budget =
       completion.choices[0].message.content?.trim() ||
       "Could not generate budget suggestions right now.";
+
+    // Cache the response
+    if (budget) {
+      await saveCachedResponse(user.id, "budget", statsHash, budget);
+    }
 
     return NextResponse.json({ budget });
   } catch (err) {

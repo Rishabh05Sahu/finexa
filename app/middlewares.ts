@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const AUTH_ROUTES = ["/login", "/signup"];
-const PROTECTED_ROUTES = ["/dashboard", "/transactions", "/insights", "/ai"]; // ✅ Added "/ai"
+const PROTECTED_ROUTES = ["/dashboard", "/transactions", "/insights", "/ai", "/profile"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -36,7 +36,8 @@ export const config = {
     "/dashboard/:path*",
     "/transactions/:path*",
     "/insights/:path*",
-    "/ai/:path*", 
+    "/ai/:path*",
+    "/profile/:path*",
     "/login",
     "/signup",
   ],

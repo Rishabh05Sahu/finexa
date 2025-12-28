@@ -2,6 +2,13 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { connectDB } from "@/lib/db";
+import { verifyAuth } from "@/lib/verifyAuth";
+import {
+  getCachedResponse,
+  saveCachedResponse,
+  generateStatsHash,
+} from "@/lib/aiCache";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY!,
@@ -9,6 +16,16 @@ const groq = new Groq({
 
 export async function POST(req: Request) {
   try {
+    await connectDB();
+
+    // Get user from token
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const user = verifyAuth(token);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { stats } = await req.json();
 
     if (!stats) {
@@ -16,6 +33,18 @@ export async function POST(req: Request) {
         { insights: "No stats provided." },
         { status: 400 }
       );
+    }
+
+    // Check cache first
+    const statsHash = generateStatsHash(stats);
+    const cachedResponse = await getCachedResponse(
+      user.id,
+      "insights",
+      statsHash
+    );
+
+    if (cachedResponse) {
+      return NextResponse.json({ insights: cachedResponse });
     }
 
     // Fallback if key missing
@@ -64,12 +93,17 @@ Keep it simple and encouraging.
           content: prompt,
         },
       ],
-      temperature: 0.6, // balanced insight + consistency
+      temperature: 0.6,
     });
 
     const insights =
       completion.choices[0].message.content?.trim() ||
       "AI could not generate insights right now.";
+
+    // Cache the response
+    if (insights) {
+      await saveCachedResponse(user.id, "insights", statsHash, insights);
+    }
 
     return NextResponse.json({ insights });
   } catch (err) {

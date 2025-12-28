@@ -1,10 +1,27 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/organisms/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const accessToken = useAuthStore((s: any) => s.accessToken);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!accessToken) {
+      router.push("/login");
+    }
+  }, [accessToken, router]);
+
+
+  if (!accessToken) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex bg-background">
       <SidebarProvider>

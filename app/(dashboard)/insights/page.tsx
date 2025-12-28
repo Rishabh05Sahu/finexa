@@ -69,7 +69,9 @@ export default function InsightsPage() {
 
   // 1) Fetch stats from /api/dashboard
   useEffect(() => {
+    // Redirect if no access token
     if (!accessToken) {
+      router.push("/login");
       return;
     }
 
@@ -95,14 +97,17 @@ export default function InsightsPage() {
 
   // 2) AI Monthly Summary
   useEffect(() => {
-    if (!stats) return;
+    if (!stats || !accessToken) return; // Add accessToken check
 
     const getMonthlySummary = async () => {
       setLoadingSummary(true);
       try {
         const res = await fetch("/api/ai/monthly-summary", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add this line
+          },
           body: JSON.stringify({ stats }),
         });
 
@@ -122,18 +127,21 @@ export default function InsightsPage() {
     };
 
     getMonthlySummary();
-  }, [stats]);
+  }, [stats, accessToken]); // Add accessToken to dependencies
 
   // 3) AI Insights
   useEffect(() => {
-    if (!stats) return;
+    if (!stats || !accessToken) return; // Add accessToken check
 
     const fetchInsights = async () => {
       setLoadingInsights(true);
       try {
         const res = await fetch("/api/ai/insights", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add this line
+          },
           body: JSON.stringify({ stats }),
         });
 
@@ -153,18 +161,21 @@ export default function InsightsPage() {
     };
 
     fetchInsights();
-  }, [stats]);
+  }, [stats, accessToken]); // Add accessToken to dependencies
 
   // 4) AI Budget Recommendation
   useEffect(() => {
-    if (!stats) return;
+    if (!stats || !accessToken) return; // Add accessToken check
 
     const fetchBudget = async () => {
       setLoadingBudget(true);
       try {
         const res = await fetch("/api/ai/budget", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`, // Add this line
+          },
           body: JSON.stringify({ stats }),
         });
 
@@ -184,7 +195,7 @@ export default function InsightsPage() {
     };
 
     fetchBudget();
-  }, [stats]);
+  }, [stats, accessToken]); // Add accessToken to dependencies
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8">
