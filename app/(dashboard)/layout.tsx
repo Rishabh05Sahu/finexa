@@ -3,7 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/organisms/sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -17,7 +17,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [accessToken, router]);
 
-
   if (!accessToken) {
     return null;
   }
@@ -29,7 +28,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <Sidebar />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 md:p-10">{children}</main>
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-10">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden mb-4">
+            <SidebarTrigger />
+          </div>
+          {children}
+        </main>
       </SidebarProvider>
     </div>
   );

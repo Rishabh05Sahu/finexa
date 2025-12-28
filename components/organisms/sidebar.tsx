@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -63,7 +62,7 @@ export default function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="hidden md:flex border-r border-sidebar-border bg-sidebar"
+      className="border-r border-sidebar-border bg-sidebar"
     >
       <SidebarHeader className="border-b border-sidebar-border">
         <div
@@ -118,7 +117,9 @@ export default function AppSidebar() {
             </SidebarGroupLabel>
           )}
 
-          <SidebarMenu className={cn("space-y-1", isCollapsed ? "px-0" : "px-2")}>
+          <SidebarMenu
+            className={cn("space-y-1", isCollapsed ? "px-0" : "px-2")}
+          >
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
               return (
@@ -199,7 +200,12 @@ export default function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className={cn("border-t border-sidebar-border", isCollapsed ? "p-2" : "p-3")}>
+      <SidebarFooter
+        className={cn(
+          "border-t border-sidebar-border",
+          isCollapsed ? "p-2" : "p-3"
+        )}
+      >
         {isCollapsed ? (
           <Button
             size="icon"
