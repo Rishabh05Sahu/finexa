@@ -72,7 +72,7 @@ export default function LandingPage() {
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400 }}
         >
-          FinSight
+          Finexa
         </motion.h1>
         <div className="flex gap-2 sm:gap-4 items-center">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -311,7 +311,7 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           className="text-2xl sm:text-3xl font-bold text-center text-foreground"
         >
-          Why FinSight?
+          Why Finexa?
         </motion.h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12 max-w-6xl mx-auto">
           {[
@@ -386,7 +386,7 @@ export default function LandingPage() {
             {
               name: "Rahul Verma",
               role: "Software Engineer",
-              text: "FinSight has literally changed how I track money. The AI insights are crazy accurate!",
+              text: "Finexa has literally changed how I track money. The AI insights are crazy accurate!",
               img: "/rahul.png",
             },
             {
@@ -486,7 +486,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mt-3 sm:mt-4 text-base sm:text-lg opacity-90 relative z-10"
         >
-          Join thousands of users managing money smarter with FinSight.
+          Join thousands of users managing money smarter with Finexa.
         </motion.p>
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -522,7 +522,7 @@ export default function LandingPage() {
         transition={{ duration: 0.6 }}
         className="py-4 sm:py-6 text-center text-xs sm:text-sm text-muted-foreground border-t border-border mt-12 sm:mt-16 lg:mt-20"
       >
-        © 2025 FinSight. All rights reserved.
+        © 2025 Finexa. All rights reserved.
       </motion.footer>
     </div>
   );

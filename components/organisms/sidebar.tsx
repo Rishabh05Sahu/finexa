@@ -84,7 +84,7 @@ export default function AppSidebar() {
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
                 <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent leading-tight">
-                  FinSight
+                  Finexa
                 </span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   Finance
